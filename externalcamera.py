@@ -7,7 +7,7 @@ import os
 import subprocess
 import gphoto2 as gp
 
-class UsbCamera:
+class ExternalCamera:
     def __init__(self, brainz=None, verbose=False):
         self.brainz = brainz
         self.verbose = verbose
@@ -30,6 +30,7 @@ class UsbCamera:
         pass
 
     def capture(self):
+        print("Take photo with external camera")
         file_path = gp.check_result(gp.gp_camera_capture( self.camera, gp.GP_CAPTURE_IMAGE, self.context))
         print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
 

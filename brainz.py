@@ -38,9 +38,10 @@ class Brainz:
     def start(self):
         # If you dont want/have some module - just remove start method
 
-        self.web_connection.start(self)
-        self.external_camera.start(self)
-        self.motion_detector.start(self)
+        self.web_connection.start()
+        self.external_camera.start()
+        self.motion_detector.start()
+#        self.video.start()
         self.__print('Brainz warming up')
 
         time.sleep(1)
@@ -57,6 +58,7 @@ class Brainz:
             self.__print('Brainz died')
 
     def camera_mode_changed(self,new_state):
+        print("STATE CHANGED IN ANAL")
         if new_state == self.STATE_DETECTION:
             self.video.stop()
             self.motion_detector.start()

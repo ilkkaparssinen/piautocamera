@@ -27,6 +27,7 @@ class Video:
             print (str)
 
     def start(self):
+        print("Start video")
         self.started = True
         self.camera = picamera.PiCamera()
         self.camera.resolution = (160, 120)
@@ -44,6 +45,7 @@ class Video:
         stream=io.BytesIO()
 
         for foo in self.camera.capture_continuous(stream,'jpeg',True):
+            print("Jpeg")
             self.brainz.web_connection.send_image(stream.getvalue())
             stream.seek(0)
             stream.truncate()

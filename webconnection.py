@@ -63,7 +63,7 @@ class WebConnection:
         self.started = True
 
     def connect(self):
-        self.ws = websocket.WebSocketApp("ws://52.51.75.200:8080",
+        self.ws = websocket.WebSocketApp("ws://52.49.204.204:8080",
                                 on_message = self.on_message,
                                 on_error = self.on_error,
                                 on_close = self.on_close)

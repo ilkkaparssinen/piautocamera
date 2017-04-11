@@ -7,8 +7,38 @@ import datetime
 
 import picamera
 import picamera.array
+import threading
 import numpy as np
 
+
+class MyMotionDetector(picamera.array.PiMotionAnalysis):
+    def __init__(self, camera, handler):
+        super(MyMotionDetector, self).__init__(camera)
+        self.handler = handler
+        self.first = True
+        print("Create motiondetector")
+
+    def analyse(self, a):
+        print("Analyze")
+        a = np.sqrt(
+            np.square(a['x'].astype(np.float)) +
+            np.square(a['y'].astype(np.float))
+        ).clip(0, 255).astype(np.uint8)
+        self.handler.last_motion = (a > 60).sum()
+        print(self.handler.last_motion)
+        # Just keep statistics
+        self.handler.motion_sum = self.handler.motion_sum + self.handler.last_motion
+        self.handler.motion_count = self.handler.motion_count + 1
+        self.handler.motion_max = max(self.handler.motion_max, self.handler.last_motion)
+        # Trigger motion detecttion if over the limit
+        print "ok"
+        if self.handler.last_motion > self.handler.brainz.motion_limit:
+            pass
+            # Ignore the first detection
+            if self.first:
+                self.first = False
+                return
+            self.handler.motion_detected()
 
 class MotionDetector:
     def __init__(self, brainz=None, verbose=False):
@@ -29,9 +59,10 @@ class MotionDetector:
 
     def motion_detected(self):
         if self.started:
-            self.brainz.external_camera.take_photo()
-            self.brainz.external_camera.take_photo()
-            self.brainz.external_camera.take_photo()
+            # Movement - take 3 photos as fast that camera can
+            self.brainz.external_camera.capture()
+            self.brainz.external_camera.capture()
+            self.brainz.external_camera.capture()
             self.detected = True
 
     def tick(self):
@@ -57,40 +88,18 @@ class MotionDetector:
         self.__print('Waiting 2 seconds for the camera to warm up')
         time.sleep(2)
 
-        self.__print('Start recording')
-        self.camera.start_recording(
-                    '/dev/null', format='h264',
-                    motion_output=MyMotionDetector(self.camera, self)
-                )
+        with MyMotionDetector(self.camera, self) as output:
+            self.__print('Start recording')
+            self.camera.start_recording(
+                    '/dev/null', format='h264', motion_output=output)
+
     def stop(self):
+        print("STOP CAMERA")
         if not self.started:
             return
         self.camera.stop_recording()
         self.started = False
 
 
-class MyMotionDetector(picamera.array.PiMotionAnalysis):
-    def __init__(self, camera, handler):
-        super(MyMotionDetector, self).__init__(camera)
-        self.handler = handler
-        self.first = True
-
-    def analyse(self, a):
-        a = np.sqrt(
-            np.square(a['x'].astype(np.float)) +
-            np.square(a['y'].astype(np.float))
-        ).clip(0, 255).astype(np.uint8)
-        self.handler.last_motion = (a > 60).sum()
-        # Just keep statistics
-        self.handler.motion_sum = self.handler.motion_sum + self.handler.last_motion
-        self.handler.motion_count = self.handler.motion_count + 1
-        self.handler.motion_max = max(self.handler.motion_max, self.handler.last_motion)
-        # Trigger motion detecttion if over the limit
-        if self.last_motion > self.handler.brainz.motion_limit:
-            # Ignore the first detection
-            if self.first:
-                self.first = False
-                return
-            self.handler.motion_detected()
 
 
