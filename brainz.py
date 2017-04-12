@@ -12,11 +12,13 @@ import time
 import os
 import datetime
 import sys
+import picamera
+
 class Brainz:
     STATE_DETECTION = 1
     STATE_MANUAL = 2
     MOTION_UPPER_LIMIT = 50
-    STATUS_REPORT_TICKS = 5
+    STATUS_REPORT_TICKS = 50
     TICK_INTERVAL = 0.1
 
     def __init__(self, verbose=False):
@@ -29,6 +31,9 @@ class Brainz:
         self.send_video = False
         self.status_counter = 0
         self.motion_limit = self.MOTION_UPPER_LIMIT
+        # Have one camera and share it between motiondetector and video comp
+        # Errors - if both try to create camera
+        self.camera = picamera.PiCamera()
 
     def __print(self, str):
         if self.verbose:
@@ -40,8 +45,8 @@ class Brainz:
 
         self.web_connection.start()
         self.external_camera.start()
-        self.motion_detector.start()
-#        self.video.start()
+	self.motion_detector.start()
+        # self.video.start()
         self.__print('Brainz warming up')
 
         time.sleep(1)
@@ -58,18 +63,29 @@ class Brainz:
             self.__print('Brainz died')
 
     def camera_mode_changed(self,new_state):
-        print("STATE CHANGED IN ANAL")
+        print("STATE CHANGED")
+        self.camera_mode = new_state
         if new_state == self.STATE_DETECTION:
+            print ("Stop video")
             self.video.stop()
+            time.sleep(1)
+            print ("Start detector")
             self.motion_detector.start()
+            print ("Ok")
+            time.sleep(1)
         else:
+            print ("Stop detector")
             self.motion_detector.stop()
+            time.sleep(1)
+            print ("Start video")
             self.video.start()
-        self_camera_mode = new_state
+            print ("ok")
+            time.sleep(1)
 
     def tick(self):
         try:
             interval = self.TICK_INTERVAL
+            self.external_camera.tick(interval)
             self.video.tick(interval)
             self.web_connection.tick(interval)
             self.status_counter += 1

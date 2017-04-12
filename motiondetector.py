@@ -9,35 +9,34 @@ import picamera
 import picamera.array
 import threading
 import numpy as np
-
+import logging
+logging.basicConfig()
 
 class MyMotionDetector(picamera.array.PiMotionAnalysis):
     def __init__(self, camera, handler):
         super(MyMotionDetector, self).__init__(camera)
         self.handler = handler
         self.first = True
-        print("Create motiondetector")
 
     def analyse(self, a):
-        print("Analyze")
+        if not self.handler.started:
+            return
         a = np.sqrt(
             np.square(a['x'].astype(np.float)) +
             np.square(a['y'].astype(np.float))
         ).clip(0, 255).astype(np.uint8)
         self.handler.last_motion = (a > 60).sum()
-        print(self.handler.last_motion)
         # Just keep statistics
         self.handler.motion_sum = self.handler.motion_sum + self.handler.last_motion
         self.handler.motion_count = self.handler.motion_count + 1
         self.handler.motion_max = max(self.handler.motion_max, self.handler.last_motion)
         # Trigger motion detecttion if over the limit
-        print "ok"
         if self.handler.last_motion > self.handler.brainz.motion_limit:
-            pass
             # Ignore the first detection
             if self.first:
                 self.first = False
                 return
+            print("movement")
             self.handler.motion_detected()
 
 class MotionDetector:
@@ -60,15 +59,16 @@ class MotionDetector:
     def motion_detected(self):
         if self.started:
             # Movement - take 3 photos as fast that camera can
-            self.brainz.external_camera.capture()
-            self.brainz.external_camera.capture()
-            self.brainz.external_camera.capture()
+            # 
+            print("Request 3 photos")
+            self.brainz.external_camera.take_photos = 3
             self.detected = True
 
     def tick(self):
         pass
 
     def get_motion_avg(self):
+        print ("Get motion average")
         if self.motion_count == 0:
             return 0
         avg = self.motion_sum / self.motion_count
@@ -80,8 +80,9 @@ class MotionDetector:
 
 
     def start(self):
+        print("START MOTION DETECTOR")
         self.started = True
-        self.camera = picamera.PiCamera()
+        self.camera = self.brainz.camera
         self.camera.resolution = (1280, 960)
         self.camera.framerate = 10
 
@@ -92,14 +93,20 @@ class MotionDetector:
             self.__print('Start recording')
             self.camera.start_recording(
                     '/dev/null', format='h264', motion_output=output)
+        print("MOTION DETECTOR STARTED")
 
     def stop(self):
-        print("STOP CAMERA")
         if not self.started:
             return
-        self.camera.stop_recording()
         self.started = False
+        print("STOP MOTION DETECTOR")
+        time.sleep(0.1)
+        try:
+            self.camera.stop_recording()
+        except:
+            pass
 
-
+        time.sleep(0.1)
+        print("MOTION DETECTOR STOPPED")
 
 

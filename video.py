@@ -27,9 +27,9 @@ class Video:
             print (str)
 
     def start(self):
-        print("Start video")
+        print("VIDEO START")
         self.started = True
-        self.camera = picamera.PiCamera()
+        self.camera = self.brainz.camera
         self.camera.resolution = (160, 120)
         self.camera.framerate = 5
         self.__print('Waiting 2 seconds for the camera to warm up')
@@ -38,6 +38,7 @@ class Video:
         self.wst = threading.Thread(target=self.record_camera)
         self.wst.daemon = True
         self.wst.start()
+        print("VIDEO STARTED")
 
 
 
@@ -46,6 +47,8 @@ class Video:
 
         for foo in self.camera.capture_continuous(stream,'jpeg',True):
             print("Jpeg")
+            if not self.started:
+                break
             self.brainz.web_connection.send_image(stream.getvalue())
             stream.seek(0)
             stream.truncate()
@@ -81,5 +84,11 @@ class Video:
     def stop(self):
         if not self.started:
             return
-
         self.started = False
+        print("STOP CAMERA")
+        time.sleep(0.1)
+        try:
+            self.camera.stop_recording()
+        except:
+            pass
+

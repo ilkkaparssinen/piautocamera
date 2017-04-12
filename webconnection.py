@@ -56,7 +56,7 @@ class WebConnection:
         self.subscribe()
         self.send_settings()
         self.__print("Websocket opened")
-        self.send_message("Ahoy! Fishertester is ready!")
+        self.send_message("Ahoy! Automatic camera is ready!")
 
     def start(self):
         self.reconnect()
@@ -84,7 +84,7 @@ class WebConnection:
         if not self.started:
             return
         self.ticks = self.ticks + 1
-        if self.ticks > 100:
+        if self.ticks > 1000:
             self.reconnect()
             self.ticks = 0
 
@@ -127,17 +127,15 @@ class WebConnection:
 
     def set_settings(self,mess):
         self.__print("Set settings!!")
-        prev_camera_mode = self.brainz.send_video
 
         if mess["camera_mode"] != self.brainz.camera_mode:
             self.brainz.camera_mode_changed(mess["camera_mode"])
 
     def take_photo(self):
         self.__print("Take photo command from client")
-        self.brainz.external_camera.capture()
+        self.brainz.external_camera.take_photos = 1
 
     def send_settings(self):
-        self.__print("Send settings")
         if not self.started:
             return
         mess = {}
@@ -155,7 +153,6 @@ class WebConnection:
         xx = json.dumps(mess)
         self.ws.send(json.dumps(mess))
         self.lock.release()
-        self.__print("Sended settings")
 
     def send_image(self,image):
         self.send_image_type("IMAGE",image)
