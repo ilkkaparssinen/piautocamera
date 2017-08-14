@@ -48,7 +48,7 @@ class ExternalCamera:
             # Use command line - slower than 
             # subprocess.call(["gphoto2","--capture-image"])
             for i in range (0,count):
-                subprocess.call(["gphoto2","--trigger-capture"])
+                subprocess.call(["gphoto2","--capture-image"])
                 # This wait depends of the camera speed
                 time.sleep(0.4)
             

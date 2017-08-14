@@ -17,7 +17,7 @@ import picamera
 class Brainz:
     STATE_DETECTION = 1
     STATE_MANUAL = 2
-    MOTION_UPPER_LIMIT = 50
+    MOTION_UPPER_LIMIT = 40
     STATUS_REPORT_TICKS = 50
     TICK_INTERVAL = 0.1
 
