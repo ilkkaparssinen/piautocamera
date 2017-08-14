@@ -13,6 +13,7 @@ class ExternalCamera:
         self.verbose = verbose
         self.started = False
         self.wait_for_next = 0
+        subprocess.call(["gphoto2","--set-config","capturetarget='Memory card'"])
 
     def __print(self, str):
         if self.verbose:
@@ -47,10 +48,10 @@ class ExternalCamera:
         try:
             # Use command line - slower than 
             # subprocess.call(["gphoto2","--capture-image"])
-            for i in range (0,count):
-                subprocess.call(["gphoto2","--capture-image"])
-                # This wait depends of the camera speed
-                time.sleep(0.4)
+#            subprocess.call(["gphoto2","--get-config","capturetarget"])
+#            subprocess.call(["gphoto2","--version"])
+#            subprocess.call(["gphoto2","--capture-image","-I", "1","-F",str(count)])
+            subprocess.call(["./takephoto.sh",str(count)])
             
             # Direct library calls - worked unreliably
             # file_path = gp.check_result(gp.gp_camera_capture( self.camera, gp.GP_CAPTURE_IMAGE, self.context))
